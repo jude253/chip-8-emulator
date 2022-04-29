@@ -1,3 +1,4 @@
+export const CHAR_SET_WIDTH = 8;
 export const CHAR_SET = [
     0xf0,
     0x90,
