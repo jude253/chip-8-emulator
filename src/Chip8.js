@@ -1,9 +1,11 @@
 import { CHAR_SET } from './constants/charsetConstants';
 import { CHAR_SET_ADDRESS } from './constants/memoryConstants';
+import { TIMER_60_HZ } from './constants/registerConstants';
 import { Display } from './Display'
 import { Keyboard } from './Keyboard';
 import { Memory } from './Memory';
 import { Registers } from './Registers';
+import { SoundCard } from './SoundCard';
 
 export class Chip8 {
     constructor(){
@@ -12,10 +14,11 @@ export class Chip8 {
         this.loadCharSet()
         this.registers = new Registers();
         this.keyboard = new Keyboard();
+        this.soundCard = new SoundCard();
         this.display = new Display(this.memory);
 
     }
-    sleep(ms = 1000){
+    sleep(ms = TIMER_60_HZ){
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
     loadCharSet(){
