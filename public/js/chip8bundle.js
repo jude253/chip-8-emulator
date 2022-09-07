@@ -9,14 +9,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "Chip8": () => (/* binding */ Chip8)
 /* harmony export */ });
-/* harmony import */ var _constants_charsetConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
-/* harmony import */ var _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(3);
-/* harmony import */ var _constants_registerConstants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(4);
-/* harmony import */ var _Display__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(5);
-/* harmony import */ var _Keyboard__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
-/* harmony import */ var _Memory__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(9);
-/* harmony import */ var _Registers__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(10);
-/* harmony import */ var _SoundCard__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(11);
+/* harmony import */ var _Disassembler__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(13);
+/* harmony import */ var _constants_charsetConstants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(2);
+/* harmony import */ var _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
+/* harmony import */ var _constants_registerConstants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(4);
+/* harmony import */ var _Display__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(5);
+/* harmony import */ var _Keyboard__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(7);
+/* harmony import */ var _Memory__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(9);
+/* harmony import */ var _Registers__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(10);
+/* harmony import */ var _SoundCard__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(11);
+
 
 
 
@@ -29,19 +31,20 @@ __webpack_require__.r(__webpack_exports__);
 class Chip8 {
     constructor(){
         console.log('Create a new Chip-8');
-        this.memory = new _Memory__WEBPACK_IMPORTED_MODULE_5__.Memory();
+        this.memory = new _Memory__WEBPACK_IMPORTED_MODULE_6__.Memory();
         this.loadCharSet()
-        this.registers = new _Registers__WEBPACK_IMPORTED_MODULE_6__.Registers();
-        this.keyboard = new _Keyboard__WEBPACK_IMPORTED_MODULE_4__.Keyboard();
-        this.soundCard = new _SoundCard__WEBPACK_IMPORTED_MODULE_7__.SoundCard();
-        this.display = new _Display__WEBPACK_IMPORTED_MODULE_3__.Display(this.memory);
+        this.registers = new _Registers__WEBPACK_IMPORTED_MODULE_7__.Registers();
+        this.keyboard = new _Keyboard__WEBPACK_IMPORTED_MODULE_5__.Keyboard();
+        this.soundCard = new _SoundCard__WEBPACK_IMPORTED_MODULE_8__.SoundCard();
+        this.disassembler = new _Disassembler__WEBPACK_IMPORTED_MODULE_0__.Disassembler();
+        this.display = new _Display__WEBPACK_IMPORTED_MODULE_4__.Display(this.memory);
 
     }
-    sleep(ms = _constants_registerConstants__WEBPACK_IMPORTED_MODULE_2__.TIMER_60_HZ){
+    sleep(ms = _constants_registerConstants__WEBPACK_IMPORTED_MODULE_3__.TIMER_60_HZ){
         return new Promise((resolve) => setTimeout(resolve, ms));
     }
     loadCharSet(){
-        this.memory.memory.set(_constants_charsetConstants__WEBPACK_IMPORTED_MODULE_0__.CHAR_SET, _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_1__.CHAR_SET_ADDRESS);
+        this.memory.memory.set(_constants_charsetConstants__WEBPACK_IMPORTED_MODULE_1__.CHAR_SET, _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.CHAR_SET_ADDRESS);
     }
 }
 
@@ -459,6 +462,96 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 const INITIAL_VOLUME = 0.3;
 
+/***/ }),
+/* 13 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Disassembler": () => (/* binding */ Disassembler)
+/* harmony export */ });
+/* harmony import */ var _constants_instructionSet__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(14);
+
+
+class Disassembler {
+    disassemble(opcode){
+        const instruction = _constants_instructionSet__WEBPACK_IMPORTED_MODULE_0__.INSTRUCTION_SET.find(
+            instruction => (opcode & instruction.mask) === instruction.pattern
+        );
+        const args = instruction.arguments.map( (arg) => (opcode & arg.mask) >> arg.shift)
+        console.log('instruction', instruction)
+        console.log('args', args)
+
+    }
+}
+
+/***/ }),
+/* 14 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "INSTRUCTION_SET": () => (/* binding */ INSTRUCTION_SET),
+/* harmony export */   "MASK_KK": () => (/* binding */ MASK_KK),
+/* harmony export */   "MASK_NNN": () => (/* binding */ MASK_NNN),
+/* harmony export */   "MASK_X": () => (/* binding */ MASK_X)
+/* harmony export */ });
+const MASK_NNN = {mask: 0x0fff};
+const MASK_X = {mask: 0x0f00, shift: 8};
+const MASK_KK = {mask: 0x00ff};
+
+const INSTRUCTION_SET = [
+    {
+        key: 2,
+        id: 'CLS',
+        name: 'CLS',
+        mask: 0xffff,
+        pattern: 0x00e0,
+        arguments: []
+
+    },
+    {
+        key: 3,
+        id: 'RET',
+        name: 'RET',
+        mask: 0xffff,
+        pattern: 0x00ee,
+        arguments: []
+
+    },
+    {
+        key: 4,
+        id: 'JP_ADDR',
+        name: 'JP',
+        mask: 0xf000,
+        pattern: 0x1000,
+        arguments: [MASK_NNN]
+    },
+    {
+        key: 5,
+        id: 'CALL_ADDR',
+        name: 'CALL',
+        mask: 0xf000,
+        pattern: 0x2000,
+        arguments: [MASK_NNN]
+    },
+    {
+        key: 6,
+        id: 'SE_VX_NN',
+        name: 'SE',
+        mask: 0xf000,
+        pattern: 0x3000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    // {
+    //     key: ,
+    //     id: '',
+    //     name: '',
+    //     mask: 0x,
+    //     pattern: 0x
+    // },
+]
+
 /***/ })
 /******/ 	]);
 /************************************************************************/
@@ -525,23 +618,27 @@ __webpack_require__.r(__webpack_exports__);
 
 const chip8 = new _Chip8__WEBPACK_IMPORTED_MODULE_0__.Chip8();
 async function runChip8(){
-    chip8.registers.ST = 10
-    while(1){
-        await chip8.sleep(200);
-        if(chip8.registers.DT > 0){
-            await chip8.sleep();
-            chip8.registers.DT--;
-        }
-        if (chip8.registers.ST > 0) {
-            chip8.soundCard.enableSound();
-            await chip8.sleep();
-            chip8.registers.ST--;
-        }
-        if (chip8.registers.ST === 0){
-            chip8.soundCard.disableSound()
-        }
-        console.log(chip8.registers.ST)
-    }
+    chip8.disassembler.disassemble(0x3f09);
+    chip8.disassembler.disassemble(0x1009);
+
+
+    // chip8.registers.ST = 10
+    // while(1){
+    //     await chip8.sleep(200);
+    //     if(chip8.registers.DT > 0){
+    //         await chip8.sleep();
+    //         chip8.registers.DT--;
+    //     }
+    //     if (chip8.registers.ST > 0) {
+    //         chip8.soundCard.enableSound();
+    //         await chip8.sleep();
+    //         chip8.registers.ST--;
+    //     }
+    //     if (chip8.registers.ST === 0){
+    //         chip8.soundCard.disableSound()
+    //     }
+    //     console.log(chip8.registers.ST)
+    // }
 }
 
 runChip8()
