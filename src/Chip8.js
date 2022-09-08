@@ -1,6 +1,6 @@
 import { Disassembler } from './Disassembler';
 import { CHAR_SET } from './constants/charsetConstants';
-import { CHAR_SET_ADDRESS } from './constants/memoryConstants';
+import { CHAR_SET_ADDRESS, LOAD_PROGRAM_ADDRESS, MEMORY_SIZE } from './constants/memoryConstants';
 import { TIMER_60_HZ } from './constants/registerConstants';
 import { Display } from './Display'
 import { Keyboard } from './Keyboard';
@@ -9,11 +9,12 @@ import { Registers } from './Registers';
 import { SoundCard } from './SoundCard';
 
 export class Chip8 {
-    constructor(){
+    constructor(romBuffer){
         console.log('Create a new Chip-8');
         this.memory = new Memory();
-        this.loadCharSet()
         this.registers = new Registers();
+        this.loadCharSet();
+        this.loadRom(romBuffer);
         this.keyboard = new Keyboard();
         this.soundCard = new SoundCard();
         this.disassembler = new Disassembler();
@@ -25,5 +26,10 @@ export class Chip8 {
     }
     loadCharSet(){
         this.memory.memory.set(CHAR_SET, CHAR_SET_ADDRESS);
+    }
+    loadRom(romBuffer){
+        console.assert(romBuffer.length + LOAD_PROGRAM_ADDRESS <= MEMORY_SIZE, 'This rom is too large.');
+        this.memory.memory.set(romBuffer, LOAD_PROGRAM_ADDRESS);
+        this.registers.PC = LOAD_PROGRAM_ADDRESS
     }
 }

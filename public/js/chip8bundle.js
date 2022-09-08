@@ -29,11 +29,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class Chip8 {
-    constructor(){
+    constructor(romBuffer){
         console.log('Create a new Chip-8');
         this.memory = new _Memory__WEBPACK_IMPORTED_MODULE_6__.Memory();
-        this.loadCharSet()
         this.registers = new _Registers__WEBPACK_IMPORTED_MODULE_7__.Registers();
+        this.loadCharSet();
+        this.loadRom(romBuffer);
         this.keyboard = new _Keyboard__WEBPACK_IMPORTED_MODULE_5__.Keyboard();
         this.soundCard = new _SoundCard__WEBPACK_IMPORTED_MODULE_8__.SoundCard();
         this.disassembler = new _Disassembler__WEBPACK_IMPORTED_MODULE_0__.Disassembler();
@@ -45,6 +46,11 @@ class Chip8 {
     }
     loadCharSet(){
         this.memory.memory.set(_constants_charsetConstants__WEBPACK_IMPORTED_MODULE_1__.CHAR_SET, _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.CHAR_SET_ADDRESS);
+    }
+    loadRom(romBuffer){
+        console.assert(romBuffer.length + _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.LOAD_PROGRAM_ADDRESS <= _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.MEMORY_SIZE, 'This rom is too large.');
+        this.memory.memory.set(romBuffer, _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.LOAD_PROGRAM_ADDRESS);
+        this.registers.PC = _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_2__.LOAD_PROGRAM_ADDRESS
     }
 }
 
@@ -492,13 +498,22 @@ class Disassembler {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "INSTRUCTION_SET": () => (/* binding */ INSTRUCTION_SET),
+/* harmony export */   "MASK_HIGHEST_AND_LOWEST_BYTE": () => (/* binding */ MASK_HIGHEST_AND_LOWEST_BYTE),
+/* harmony export */   "MASK_HIGHEST_BYTE": () => (/* binding */ MASK_HIGHEST_BYTE),
 /* harmony export */   "MASK_KK": () => (/* binding */ MASK_KK),
+/* harmony export */   "MASK_N": () => (/* binding */ MASK_N),
 /* harmony export */   "MASK_NNN": () => (/* binding */ MASK_NNN),
-/* harmony export */   "MASK_X": () => (/* binding */ MASK_X)
+/* harmony export */   "MASK_X": () => (/* binding */ MASK_X),
+/* harmony export */   "MASK_Y": () => (/* binding */ MASK_Y)
 /* harmony export */ });
 const MASK_NNN = {mask: 0x0fff};
-const MASK_X = {mask: 0x0f00, shift: 8};
 const MASK_KK = {mask: 0x00ff};
+const MASK_N = {mask: 0x000f};
+const MASK_X = {mask: 0x0f00, shift: 8};
+const MASK_Y = {mask: 0x00f0, shift: 4};
+const MASK_HIGHEST_BYTE = 0xf000;
+const MASK_HIGHEST_AND_LOWEST_BYTE = 0xf00f;
+
 
 const INSTRUCTION_SET = [
     {
@@ -523,7 +538,7 @@ const INSTRUCTION_SET = [
         key: 4,
         id: 'JP_ADDR',
         name: 'JP',
-        mask: 0xf000,
+        mask: MASK_HIGHEST_BYTE,
         pattern: 0x1000,
         arguments: [MASK_NNN]
     },
@@ -531,7 +546,7 @@ const INSTRUCTION_SET = [
         key: 5,
         id: 'CALL_ADDR',
         name: 'CALL',
-        mask: 0xf000,
+        mask: MASK_HIGHEST_BYTE,
         pattern: 0x2000,
         arguments: [MASK_NNN]
     },
@@ -539,17 +554,258 @@ const INSTRUCTION_SET = [
         key: 6,
         id: 'SE_VX_NN',
         name: 'SE',
-        mask: 0xf000,
+        mask: MASK_HIGHEST_BYTE,
         pattern: 0x3000,
         arguments: [MASK_X, MASK_KK]
     },
-    // {
-    //     key: ,
-    //     id: '',
-    //     name: '',
-    //     mask: 0x,
-    //     pattern: 0x
-    // },
+    {
+        key: 7,
+        id: 'SNE_VX_NN',
+        name: 'SNE',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0x4000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 7,
+        id: 'SNE_VX_NN',
+        name: 'SNE',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0x4000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 8,
+        id: 'SE_VX_VY',
+        name: 'SE',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x5000,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 9,
+        id: 'LD_VX_KK',
+        name: 'LD',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0x6000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 10,
+        id: 'ADD_VX_KK',
+        name: 'ADD',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0x7000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 10,
+        id: 'ADD_VX_KK',
+        name: 'ADD',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0x7000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 11,
+        id: 'LD_VX_VY',
+        name: 'LD',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8000,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 12,
+        id: 'OR_VX_VY',
+        name: 'OR',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8001,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 13,
+        id: 'AND_VX_VY',
+        name: 'AND',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8002,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 14,
+        id: 'XOR_VX_VY',
+        name: 'XOR',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8003,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 15,
+        id: 'ADD_VX_VY',
+        name: 'ADD',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8004,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 16,
+        id: 'SUB_VX_VY',
+        name: 'SUB',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8005,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 17,
+        id: 'SHR_VX_VY',
+        name: 'SHR',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8006,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 18,
+        id: 'SUBN_VX_VY',
+        name: 'SUBN',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x8007,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 19,
+        id: 'SHL_VX_VY',
+        name: 'SHL',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x800E,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 20,
+        id: 'SNE_VX_VY',
+        name: 'SNE',
+        mask: MASK_HIGHEST_AND_LOWEST_BYTE,
+        pattern: 0x9000,
+        arguments: [MASK_X, MASK_Y]
+    },
+    {
+        key: 21,
+        id: 'LD_I_ADDR',
+        name: 'LD',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0xa000,
+        arguments: [MASK_NNN]
+    },
+    {
+        key: 22,
+        id: 'JP_V0_ADDR',
+        name: 'JP',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0xb000,
+        arguments: [MASK_NNN]
+    },
+    {
+        key: 23,
+        id: 'RND_VX',
+        name: 'RND',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0xc000,
+        arguments: [MASK_X, MASK_KK]
+    },
+    {
+        key: 24,
+        id: 'DRW_VX_VY_N',
+        name: 'DRW',
+        mask: MASK_HIGHEST_BYTE,
+        pattern: 0xd000,
+        arguments: [MASK_X, MASK_Y, MASK_N]
+    },
+    {
+        key: 25,
+        id: 'SKP_VX',
+        name: 'SKP',
+        mask: 0xf0ff,
+        pattern: 0xe09e,
+        arguments: [MASK_X]
+    },
+    {
+        key: 26,
+        id: 'SKNP_VX',
+        name: 'SKNP',
+        mask: 0xf0ff,
+        pattern: 0xe0a1,
+        arguments: [MASK_X]
+    },
+    {
+        key: 27,
+        id: 'LD_VX_DT',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf007,
+        arguments: [MASK_X]
+    },
+    {
+        key: 28,
+        id: 'LD_VX_K',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf00a,
+        arguments: [MASK_X]
+    },
+    {
+        key: 29,
+        id: 'LD_DT_VX',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf015,
+        arguments: [MASK_X]
+    },
+    {
+        key: 30,
+        id: 'LD_ST_VX',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf018,
+        arguments: [MASK_X]
+    },
+    {
+        key: 31,
+        id: 'ADD_I_VX',
+        name: 'ADD',
+        mask: 0xf0ff,
+        pattern: 0xf01e,
+        arguments: [MASK_X]
+    },
+    {
+        key: 32,
+        id: 'LD_F_VX',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf029,
+        arguments: [MASK_X]
+    },
+    {
+        key: 33,
+        id: 'LD_B_VX',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf033,
+        arguments: [MASK_X]
+    },
+    {
+        key: 34,
+        id: 'LD_I_VX',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf055,
+        arguments: [MASK_X]
+    },
+    {
+        key: 35,
+        id: 'LD_VX_I',
+        name: 'LD',
+        mask: 0xf0ff,
+        pattern: 0xf065,
+        arguments: [MASK_X]
+    },
 ]
 
 /***/ })
@@ -616,10 +872,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _Chip8__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(1);
 
 
-const chip8 = new _Chip8__WEBPACK_IMPORTED_MODULE_0__.Chip8();
 async function runChip8(){
-    chip8.disassembler.disassemble(0x3f09);
-    chip8.disassembler.disassemble(0x1009);
+    const rom = await fetch('./roms/test_opcode.ch8');
+    const arrayBuffer = await rom.arrayBuffer();
+    const romBuffer = new Uint8Array(arrayBuffer);
+    const chip8 = new _Chip8__WEBPACK_IMPORTED_MODULE_0__.Chip8(romBuffer);
+    console.log(romBuffer);
+    console.log(chip8.memory.getMemory(0x200));
+    console.log(chip8.memory.getMemory(0x201));
+    console.log(chip8.memory.getMemory(0x202));
+    console.log(chip8.memory.getMemory(0x203));
+
+
 
 
     // chip8.registers.ST = 10
